@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Events\MessageEvent;
 use App\Models\Message;
 use App\Models\User;
+use App\Notifications\NewMessageNotification;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -59,6 +60,8 @@ class ChatController extends Controller
                 throw new Exception('Could not create message');
             }
             MessageEvent::dispatch($message);
+            $user = User::find($message->receiver);
+            $user->notify(new NewMessageNotification($request->user(), 'You have a new message'));
             return response()->json([
                 'status' => ResponseAlias::HTTP_OK,
                 'data' => $message,

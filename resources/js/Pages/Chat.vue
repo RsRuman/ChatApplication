@@ -29,7 +29,7 @@
                 <div class="flex flex-col w-2/5 border-r-2 overflow-y-auto">
                     <div v-for="(user, uIdx) in users" :key="'user'+uIdx" class="flex flex-row py-4 px-2 justify-center items-center border-b-2 cursor-pointer"
                          @click.prevent="setCurrentUser(user)"
-                         :class="currentUser && currentUser.id === user.id ? 'border-l-4 border-blue-400' : ''">
+                         :class="currentUser && currentUser.id === user.id ? 'border-l-4 border-blue-400' : notification && notification?.from?.id === user.id ? 'border-l-4 border-red-400' : ''">
                         <div class="w-1/4">
                             <div class="h-12 w-12 p-2 bg-yellow-500 rounded-full text-white font-semibold flex items-center justify-center">
                                 {{ user.name.split(' ').map((item) => item.charAt(0)).join('').toUpperCase() }}
@@ -118,6 +118,7 @@ export default {
     data() {
         return {
             messages: [],
+            notification: {},
             currentUser: {},
             form: {
                 receiver: '',
@@ -127,6 +128,11 @@ export default {
     },
 
     created() {
+        Echo.private('notification.' + this.$page.props.auth.user.id)
+            .notification((notification) => {
+                this.notification = notification;
+            });
+
         Echo.private('messages.' + this.$page.props.auth.user.id)
             .listen('.messages.chat', (e) => {
                 this.messages.push(e.message);
@@ -138,6 +144,7 @@ export default {
         setCurrentUser(user){
             this.currentUser = user;
             this.form.receiver = user.id;
+            this.notification = {};
             this.getMessages();
         },
 
@@ -163,7 +170,7 @@ export default {
                     })
             }
         }
-    }
+    },
 
 
 }
